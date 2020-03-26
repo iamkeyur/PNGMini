@@ -1,12 +1,7 @@
-#include <algorithm>
 #include <sstream>
 #include <iostream>
-#include <iterator>
 #include <iomanip>
 #include <fstream>
-#include <vector>
-#include <cassert>
-#include <string>
 #include <stdlib.h>
 
 typedef struct {
@@ -59,7 +54,7 @@ static unsigned char writeChunk(FILE** out, chunk* c) {
     return 1;
 }
 
-static bool readChunk(FILE** file, FILE** out, chunk* c) {
+static unsigned char readChunk(FILE** file, FILE** out, chunk* c) {
     unsigned char* length =
         (unsigned char*)malloc(sizeof(4 * sizeof(unsigned char)));
 
@@ -67,6 +62,7 @@ static bool readChunk(FILE** file, FILE** out, chunk* c) {
 
     size_t readsize;
 
+	/* Reading data length*/
     readsize = fread(length, 1, 4, *file);
     if (readsize != 4) return false;
 
@@ -82,10 +78,10 @@ static bool readChunk(FILE** file, FILE** out, chunk* c) {
         return false;
 
     memcpy(c->length, length, 4);
-
+	/* Reading chunk type*/
     readsize = fread(c->chunk_type, 1, 4, *file);
     if (readsize != 4) return false;
-
+	/* Reading chunk data */
     if (dataLength != 0) {
         c->data = (unsigned char*)malloc(dataLength * sizeof(unsigned char));
         if (NULL == c->data) return false;
@@ -104,7 +100,7 @@ int main(int argc, char* argv[]) {
     std::string out_file =
         "C:\\Users\\keyur\\Desktop\\Heuristic\\test_out_cmp_3.png";
     if (argc != 2) {
-        std::cout << "usage: " << argv[0] << " <filename>\n";
+        std::cout << "usage: " << argv[0] << " <input.png> <output.png>\n";
     }
     else {
         std::cout << argv[1] << std::endl;
@@ -113,7 +109,7 @@ int main(int argc, char* argv[]) {
         if (!err && file != NULL) {
             unsigned char* header = new unsigned char[8];
             size_t readsize;
-
+			/* Reading PNG header*/
             readsize = fread(header, 1, 8, file);
             if (readsize != 8) return 78;
             /**
@@ -125,7 +121,7 @@ int main(int argc, char* argv[]) {
                 header[6] == 0x1a && header[7] == 0x0a)) {
                 exit(EXIT_FAILURE);
             }
-            std::cout << '\n';
+
             FILE* out;
             errno_t err = fopen_s(&out, out_file.c_str(), "wb");
             if (out == NULL || err) return 79;
@@ -140,10 +136,9 @@ int main(int argc, char* argv[]) {
                 if (NULL == c) exit(EXIT_FAILURE);
                 ret = readChunk(&file, &out, c);
                 if (ret) {
-                    unsigned int len = read32bitInt(c->length);
                     if (isCriticalChunk(c->chunk_type))
                         if (!writeChunk(&out, c)) exit(EXIT_FAILURE);
-                    if (len != 0) {
+                    if (read32bitInt(c->length) != 0) {
                         free(c->data);
                     }
                     free(c->length);
@@ -157,7 +152,6 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            std::cout << "Done";
             fclose(file);
             fclose(out);
         }
