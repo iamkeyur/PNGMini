@@ -61,8 +61,8 @@ static unsigned char readChunk(FILE** file, FILE** out, chunk* c) {
     if (!length) return false;
 
     size_t readsize;
-
-	/* Reading data length*/
+    
+    /* Reading data length*/
     readsize = fread(length, 1, 4, *file);
     if (readsize != 4) return false;
 
@@ -78,10 +78,10 @@ static unsigned char readChunk(FILE** file, FILE** out, chunk* c) {
         return false;
 
     memcpy(c->length, length, 4);
-	/* Reading chunk type*/
+    /* Reading chunk type*/
     readsize = fread(c->chunk_type, 1, 4, *file);
     if (readsize != 4) return false;
-	/* Reading chunk data */
+    /* Reading chunk data */
     if (dataLength != 0) {
         c->data = (unsigned char*)malloc(dataLength * sizeof(unsigned char));
         if (NULL == c->data) return false;
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
         if (!err && file != NULL) {
             unsigned char* header = new unsigned char[8];
             size_t readsize;
-			/* Reading PNG header*/
+            /* Reading PNG header*/
             readsize = fread(header, 1, 8, file);
             if (readsize != 8) return 78;
             /**
